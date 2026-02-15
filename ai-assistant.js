@@ -105,84 +105,129 @@ class AITutor {
 
     // ==================== EVENT LISTENERS ====================
     initializeEventListeners() {
-        this.feedBtn.addEventListener('click', () => this.feedKnowledge());
-        this.sendBtn.addEventListener('click', () => this.sendMessage());
-        this.voiceBtn.addEventListener('click', () => this.toggleVoiceRecognition());
-        this.messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.sendMessage();
-        });
+        try {
+            console.log('[INIT] Setting up event listeners...');
+            
+            this.feedBtn.addEventListener('click', () => this.feedKnowledge());
+            this.sendBtn.addEventListener('click', () => this.sendMessage());
+            this.voiceBtn.addEventListener('click', () => this.toggleVoiceRecognition());
+            this.messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.sendMessage();
+            });
 
-        // Language buttons
-        document.querySelectorAll('.lang-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => this.changeLanguage(e.target.dataset.lang));
-        });
+            // Language buttons
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => this.changeLanguage(e.target.dataset.lang));
+            });
 
-        // File upload
-        const insertFileBtn = document.getElementById('insertFileBtn');
-        if (insertFileBtn) {
-            insertFileBtn.addEventListener('click', () => this.fileInput.click());
-        }
-        this.uploadZone.addEventListener('click', () => this.fileInput.click());
-        this.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
-        this.uploadZone.addEventListener('dragover', (e) => this.handleDragOver(e));
-        this.uploadZone.addEventListener('dragleave', (e) => this.handleDragLeave(e));
-        this.uploadZone.addEventListener('drop', (e) => this.handleDrop(e));
+            // File upload
+            const insertFileBtn = document.getElementById('insertFileBtn');
+            if (insertFileBtn) {
+                insertFileBtn.addEventListener('click', () => this.fileInput.click());
+            }
+            this.uploadZone.addEventListener('click', () => this.fileInput.click());
+            this.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
+            this.uploadZone.addEventListener('dragover', (e) => this.handleDragOver(e));
+            this.uploadZone.addEventListener('dragleave', (e) => this.handleDragLeave(e));
+            this.uploadZone.addEventListener('drop', (e) => this.handleDrop(e));
 
-        // Goal setting
-        this.setGoalBtn.addEventListener('click', () => this.setLearningGoal());
+            // Goal setting
+            this.setGoalBtn.addEventListener('click', () => this.setLearningGoal());
 
-        // Quick actions
-        this.practiceBtnQuick.addEventListener('click', () => this.startTestMode());
-        this.explainBtnQuick.addEventListener('click', () => this.explainConcept());
-        this.translateBtnQuick.addEventListener('click', () => this.toggleTranslation());
-        this.summaryBtnQuick.addEventListener('click', () => this.showSummary());
+            // Quick actions
+            this.practiceBtnQuick.addEventListener('click', () => this.startTestMode());
+            this.explainBtnQuick.addEventListener('click', () => this.explainConcept());
+            this.translateBtnQuick.addEventListener('click', () => this.toggleTranslation());
+            this.summaryBtnQuick.addEventListener('click', () => this.showSummary());
 
-        // Student Management
-        if (this.createStudentBtn) {
-            this.createStudentBtn.addEventListener('click', () => this.createStudent());
-        }
-        if (this.clearLogsBtn) {
-            this.clearLogsBtn.addEventListener('click', () => this.clearAllLogs());
+            // Student Management
+            if (this.createStudentBtn) {
+                console.log('[INIT] Binding createStudentBtn...');
+                this.createStudentBtn.addEventListener('click', () => {
+                    console.log('[INIT] createStudentBtn clicked');
+                    this.createStudent();
+                });
+            } else {
+                console.warn('[INIT] ⚠️ createStudentBtn not found');
+            }
+
+            if (this.clearLogsBtn) {
+                console.log('[INIT] Binding clearLogsBtn...');
+                this.clearLogsBtn.addEventListener('click', () => this.clearAllLogs());
+            } else {
+                console.warn('[INIT] ⚠️ clearLogsBtn not found');
+            }
+
+            console.log('[INIT] ✅ All event listeners set up');
+        } catch (error) {
+            console.error('[INIT] ❌ Error setting up listeners:', error);
         }
     }
 
     // ==================== STUDENT MANAGEMENT ====================
     createStudent() {
-        const name = this.studentName.value.trim();
-        const grade = this.gradeSelect.value;
+        try {
+            console.log('[STUDENT] Creating student profile...');
+            
+            const name = this.studentName.value.trim();
+            const grade = this.gradeSelect.value;
 
-        if (!name) {
-            this.showNotification('Please enter student name first!', 'error');
-            return;
+            console.log(`[STUDENT] Name: "${name}", Grade: "${grade}"`);
+
+            if (!name) {
+                this.showNotification('Please enter student name first!', 'error');
+                return;
+            }
+
+            if (!grade) {
+                this.showNotification('Please select a grade level!', 'error');
+                return;
+            }
+
+            // Create or switch to student profile
+            this.currentStudent = name;
+            this.currentGrade = grade;
+            console.log('[STUDENT] Profile set:', { name, grade });
+
+            // Initialize student data in localStorage if not exists
+            const studentKey = `student_${name}_${grade}`;
+            if (!localStorage.getItem(`${studentKey}_knowledge`)) {
+                console.log('[STUDENT] Initializing new student in localStorage...');
+                localStorage.setItem(`${studentKey}_knowledge`, '');
+                localStorage.setItem(`${studentKey}_logs`, JSON.stringify([]));
+                localStorage.setItem(`${studentKey}_tests`, JSON.stringify([]));
+            } else {
+                console.log('[STUDENT] Student already exists, loading existing data...');
+            }
+
+            // Save current student
+            localStorage.setItem('current_student', name);
+            localStorage.setItem('current_grade', grade);
+            console.log('[STUDENT] ✅ Saved to localStorage');
+
+            // Load student's data
+            console.log('[STUDENT] Loading student data...');
+            this.loadStudentData();
+            
+            console.log('[STUDENT] Updating display...');
+            this.updateStudentDisplay();
+
+            // Update AI status
+            if (this.aiStatus) {
+                this.aiStatus.textContent = `Teaching: ${name} (${grade})`;
+            }
+
+            // Add welcome message
+            const welcomeMsg = `👋 Hello ${name}! Welcome to your ${grade} learning session! We'll work on your studies together. 📚`;
+            this.addAIMessage(welcomeMsg);
+            
+            this.showNotification(`✅ Student profile created: ${name} - ${grade}`, 'success');
+            console.log('[STUDENT] ✅ Profile creation complete');
+
+        } catch (error) {
+            console.error('[STUDENT] ❌ Error creating student:', error);
+            this.showNotification(`Error: ${error.message}`, 'error');
         }
-
-        if (!grade) {
-            this.showNotification('Please select a grade level!', 'error');
-            return;
-        }
-
-        // Create or switch to student profile
-        this.currentStudent = name;
-        this.currentGrade = grade;
-
-        // Initialize student data in localStorage if not exists
-        const studentKey = `student_${name}_${grade}`;
-        if (!localStorage.getItem(`${studentKey}_knowledge`)) {
-            localStorage.setItem(`${studentKey}_knowledge`, '');
-            localStorage.setItem(`${studentKey}_logs`, JSON.stringify([]));
-            localStorage.setItem(`${studentKey}_tests`, JSON.stringify([]));
-        }
-
-        // Save current student
-        localStorage.setItem('current_student', name);
-        localStorage.setItem('current_grade', grade);
-
-        // Load student's data
-        this.loadStudentData();
-        this.updateStudentDisplay();
-
-        this.addAIMessage(`👋 Hello ${name}! Welcome to your Grade ${grade} learning session! We'll work on your studies together. 📚`);
-        this.showNotification(`Student profile created: ${name} - Grade ${grade}`, 'success');
     }
 
     loadLastStudent() {
@@ -252,11 +297,27 @@ class AITutor {
     }
 
     updateStudentDisplay() {
-        if (this.currentStudentDisplay && this.currentStudent) {
-            this.currentStudentDisplay.innerHTML = `
-                <p>📚 <strong>${this.currentStudent}</strong></p>
-                <p style="margin: 0.3rem 0 0; font-size: 0.85rem;">Grade: <strong>${this.currentGrade}</strong></p>
-            `;
+        try {
+            console.log('[DISPLAY] Updating student display...');
+            
+            if (!this.currentStudentDisplay) {
+                console.warn('[DISPLAY] ⚠️ currentStudentDisplay element not found');
+                return;
+            }
+
+            if (this.currentStudent && this.currentGrade) {
+                const html = `
+                    <p>📚 <strong>${this.currentStudent}</strong></p>
+                    <p style="margin: 0.3rem 0 0; font-size: 0.85rem;">Grade: <strong>${this.currentGrade}</strong></p>
+                `;
+                this.currentStudentDisplay.innerHTML = html;
+                console.log('[DISPLAY] ✅ Student display updated:', { name: this.currentStudent, grade: this.currentGrade });
+            } else {
+                this.currentStudentDisplay.innerHTML = '<p>No student selected</p>';
+                console.log('[DISPLAY] No student set yet');
+            }
+        } catch (error) {
+            console.error('[DISPLAY] ❌ Error updating display:', error);
         }
     }
 
@@ -969,11 +1030,26 @@ class AITutor {
     }
 
     addAIMessage(text) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message ai';
-        messageDiv.innerHTML = `<div class="message-bubble">${this.escapeHtml(text).replace(/\n/g, '<br>')}</div>`;
-        this.chatMessages.appendChild(messageDiv);
-        this.scrollToBottom();
+        try {
+            if (!text) {
+                console.warn('[AI MESSAGE] Empty text');
+                return;
+            }
+
+            if (!this.chatMessages) {
+                console.error('[AI MESSAGE] ❌ chatMessages element not found');
+                return;
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai';
+            messageDiv.innerHTML = `<div class="message-bubble">${this.escapeHtml(text).replace(/\n/g, '<br>')}</div>`;
+            this.chatMessages.appendChild(messageDiv);
+            this.scrollToBottom();
+            console.log('[AI MESSAGE] ✅ Message added');
+        } catch (error) {
+            console.error('[AI MESSAGE] ❌ Error:', error);
+        }
     }
 
     /**
