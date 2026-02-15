@@ -1,0 +1,29 @@
+Sample Math Test - Grade 4
+
+1. What is 5 + 3?
+A. 6
+B. 8
+C. 9
+D. 10
+
+2. What is 10 - 4?
+A. 5
+B. 6
+C. 7
+D. 8
+
+3. What is 2 × 6?
+A. 8
+B. 10
+C. 12
+D. 14
+
+4. What is 20 ÷ 5?
+A. 2
+B. 3
+C. 4
+D. 5
+
+This is a sample test file to demonstrate the AI Tutor functionality.
+You should upload this file and create a student profile to see how the activity logs work.
+The system will track everything that happens - file uploads, tests started, messages sent, etc.

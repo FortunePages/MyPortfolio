@@ -106,9 +106,9 @@ body {
 /* ==================== CONTAINER LAYOUT ==================== */
 .container {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    padding: 2rem;
+    grid-template-columns: 1.2fr 1.5fr 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
     height: 100vh;
     overflow: hidden;
     position: relative;
@@ -999,6 +999,285 @@ body {
 }
 
 @media (max-width: 768px) {
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+    
+    .lang-buttons {
+        flex-direction: column;
+    }
+
+    .lang-btn {
+        width: 100%;
+    }
+}
+
+/* ==================== STUDENT SECTION ==================== */
+.student-section {
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.student-section h3 {
+    margin-bottom: 1rem;
+    color: var(--primary-glow);
+    font-size: 0.95rem;
+}
+
+.student-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.current-student {
+    background: rgba(0, 255, 204, 0.1);
+    border: 1px solid var(--secondary-glow);
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    color: var(--secondary-glow);
+    font-weight: 600;
+    min-height: 30px;
+}
+
+.current-student p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+#createStudentBtn {
+    padding: 0.8rem;
+    width: 100%;
+}
+
+/* ==================== LOGS PANEL ==================== */
+.logs-panel {
+    display: flex;
+    flex-direction: column;
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-glow);
+    overflow: hidden;
+}
+
+.logs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.logs-header h3 {
+    color: var(--primary-glow);
+    margin: 0;
+    font-size: 1rem;
+}
+
+.btn-clear-logs {
+    background: transparent;
+    border: 1px solid var(--accent-glow);
+    color: var(--accent-glow);
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.btn-clear-logs:hover {
+    background: rgba(255, 0, 110, 0.2);
+}
+
+.activity-logs {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.activity-logs::-webkit-scrollbar {
+    width: 6px;
+}
+
+.activity-logs::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.activity-logs::-webkit-scrollbar-thumb {
+    background: var(--primary-glow);
+    border-radius: 3px;
+    opacity: 0.4;
+}
+
+.log-entry {
+    background: rgba(0, 212, 255, 0.1);
+    border-left: 3px solid var(--primary-glow);
+    border-radius: 8px;
+    padding: 0.8rem;
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.log-entry-text {
+    flex: 1;
+    color: var(--text-primary);
+}
+
+.log-entry-time {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+    display: block;
+}
+
+.log-entry-action {
+    color: var(--secondary-glow);
+    font-weight: 600;
+}
+
+.log-entry-delete {
+    background: transparent;
+    border: 1px solid var(--accent-glow);
+    color: var(--accent-glow);
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    margin-left: 0.5rem;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.log-entry-delete:hover {
+    background: rgba(255, 0, 110, 0.2);
+}
+
+.empty-logs {
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.9rem;
+}
+
+/* Knowledge Summary */
+.knowledge-summary {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+}
+
+.knowledge-summary h3 {
+    color: var(--text-secondary);
+    margin-bottom: 0.8rem;
+    font-size: 0.95rem;
+}
+
+.knowledge-summary-content {
+    background: rgba(0, 212, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.8rem;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.knowledge-item {
+    background: rgba(0, 212, 255, 0.1);
+    padding: 0.6rem;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    border-left: 2px solid var(--secondary-glow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.knowledge-item-text {
+    flex: 1;
+    font-size: 0.8rem;
+}
+
+.knowledge-item-delete {
+    background: rgba(255, 0, 110, 0.2);
+    border: 1px solid var(--accent-glow);
+    color: var(--accent-glow);
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.65rem;
+    margin-left: 0.3rem;
+}
+
+.knowledge-item-delete:hover {
+    background: rgba(255, 0, 110, 0.3);
+}
+
+/* ==================== RESPONSIVE 3-COLUMN ==================== */
+@media (max-width: 1600px) {
+    .container {
+        grid-template-columns: 1fr 1.2fr 0.9fr;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .knowledge-panel,
+    .assistant-panel,
+    .logs-panel {
+        padding: 1.2rem;
+    }
+}
+
+@media (max-width: 1200px) {
+    .container {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .logs-panel {
+        grid-column: 1 / -1;
+        max-height: 25vh;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .knowledge-panel,
+    .assistant-panel,
+    .logs-panel {
+        margin-bottom: 1rem;
+    }
+
     .quick-actions {
         grid-template-columns: 1fr;
     }

@@ -66,6 +66,16 @@ class AITutor {
         this.translateBtnQuick = document.getElementById('translateBtnQuick');
         this.summaryBtnQuick = document.getElementById('summaryBtnQuick');
 
+        // Student Section Elements
+        this.gradeSelect = document.getElementById('studentGrade');
+        this.createStudentBtn = document.getElementById('createStudentBtn');
+        this.currentStudentDisplay = document.getElementById('currentStudent');
+
+        // Logs Panel Elements
+        this.activityLogs = document.getElementById('activityLogs');
+        this.clearLogsBtn = document.querySelector('.btn-clear-logs');
+        this.knowledgeSummaryContent = document.getElementById('knowledgeSummary');
+
         // State
         this.currentLanguage = 'en';
         this.knowledge = '';
@@ -74,6 +84,11 @@ class AITutor {
         this.testMode = false;
         this.studentGoal = {};
         this.isListening = false;
+        
+        // Multi-Student State
+        this.currentStudent = null;
+        this.currentGrade = null;
+        this.activityLog = [];
 
         // Speech
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -85,6 +100,7 @@ class AITutor {
 
         this.initializeEventListeners();
         this.setupSpeechRecognition();
+        this.loadLastStudent();
     }
 
     // ==================== EVENT LISTENERS ====================
@@ -120,6 +136,183 @@ class AITutor {
         this.explainBtnQuick.addEventListener('click', () => this.explainConcept());
         this.translateBtnQuick.addEventListener('click', () => this.toggleTranslation());
         this.summaryBtnQuick.addEventListener('click', () => this.showSummary());
+
+        // Student Management
+        if (this.createStudentBtn) {
+            this.createStudentBtn.addEventListener('click', () => this.createStudent());
+        }
+        if (this.clearLogsBtn) {
+            this.clearLogsBtn.addEventListener('click', () => this.clearAllLogs());
+        }
+    }
+
+    // ==================== STUDENT MANAGEMENT ====================
+    createStudent() {
+        const name = this.studentName.value.trim();
+        const grade = this.gradeSelect.value;
+
+        if (!name) {
+            this.showNotification('Please enter student name first!', 'error');
+            return;
+        }
+
+        if (!grade) {
+            this.showNotification('Please select a grade level!', 'error');
+            return;
+        }
+
+        // Create or switch to student profile
+        this.currentStudent = name;
+        this.currentGrade = grade;
+
+        // Initialize student data in localStorage if not exists
+        const studentKey = `student_${name}_${grade}`;
+        if (!localStorage.getItem(`${studentKey}_knowledge`)) {
+            localStorage.setItem(`${studentKey}_knowledge`, '');
+            localStorage.setItem(`${studentKey}_logs`, JSON.stringify([]));
+            localStorage.setItem(`${studentKey}_tests`, JSON.stringify([]));
+        }
+
+        // Save current student
+        localStorage.setItem('current_student', name);
+        localStorage.setItem('current_grade', grade);
+
+        // Load student's data
+        this.loadStudentData();
+        this.updateStudentDisplay();
+
+        this.addAIMessage(`👋 Hello ${name}! Welcome to your Grade ${grade} learning session! We'll work on your studies together. 📚`);
+        this.showNotification(`Student profile created: ${name} - Grade ${grade}`, 'success');
+    }
+
+    loadLastStudent() {
+        const lastStudent = localStorage.getItem('current_student');
+        const lastGrade = localStorage.getItem('current_grade');
+
+        if (lastStudent && lastGrade) {
+            this.currentStudent = lastStudent;
+            this.currentGrade = lastGrade;
+            
+            if (this.studentName) {
+                this.studentName.value = lastStudent;
+            }
+            if (this.gradeSelect) {
+                this.gradeSelect.value = lastGrade;
+            }
+
+            this.loadStudentData();
+            this.updateStudentDisplay();
+        }
+    }
+
+    loadStudentData() {
+        if (!this.currentStudent || !this.currentGrade) return;
+
+        const studentKey = `student_${this.currentStudent}_${this.currentGrade}`;
+        this.knowledge = localStorage.getItem(`${studentKey}_knowledge`) || '';
+        this.activityLog = JSON.parse(localStorage.getItem(`${studentKey}_logs`) || '[]');
+
+        this.displayActivityLogs();
+        this.updateKnowledgeSummary();
+    }
+
+    updateStudentDisplay() {
+        if (this.currentStudentDisplay && this.currentStudent) {
+            this.currentStudentDisplay.innerHTML = `
+                <p>📚 <strong>${this.currentStudent}</strong></p>
+                <p style="margin: 0.3rem 0 0; font-size: 0.85rem;">Grade: <strong>${this.currentGrade}</strong></p>
+            `;
+        }
+    }
+
+    addActivityLog(action, content = '') {
+        if (!this.currentStudent || !this.currentGrade) {
+            this.showNotification('Please create a student profile first!', 'error');
+            return;
+        }
+
+        const logEntry = {
+            id: Date.now(),
+            action: action,
+            content: content,
+            timestamp: new Date().toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true
+            }),
+            fullTime: new Date().toLocaleString()
+        };
+
+        this.activityLog.push(logEntry);
+
+        // Save to localStorage
+        const studentKey = `student_${this.currentStudent}_${this.currentGrade}`;
+        localStorage.setItem(`${studentKey}_logs`, JSON.stringify(this.activityLog));
+
+        this.displayActivityLogs();
+    }
+
+    deleteActivityLog(logId) {
+        this.activityLog = this.activityLog.filter(log => log.id !== logId);
+
+        // Save to localStorage
+        const studentKey = `student_${this.currentStudent}_${this.currentGrade}`;
+        localStorage.setItem(`${studentKey}_logs`, JSON.stringify(this.activityLog));
+
+        this.displayActivityLogs();
+        this.showNotification('Log entry deleted', 'success');
+    }
+
+    displayActivityLogs() {
+        if (!this.activityLogs) return;
+
+        if (this.activityLog.length === 0) {
+            this.activityLogs.innerHTML = '<div class="empty-logs">No activities yet. Start by uploading files! 📤</div>';
+            return;
+        }
+
+        this.activityLogs.innerHTML = this.activityLog
+            .slice()
+            .reverse()
+            .map(log => `
+                <div class="log-entry">
+                    <div class="log-entry-text">
+                        <span class="log-entry-time">${log.timestamp}</span>
+                        <span class="log-entry-action">${log.action}</span>
+                        ${log.content ? `<div style="margin-top: 0.3rem; font-size: 0.8rem; opacity: 0.8;">${log.content.substring(0, 50)}${log.content.length > 50 ? '...' : ''}</div>` : ''}
+                    </div>
+                    <button class="log-entry-delete" onclick="tutorInstance.deleteActivityLog(${log.id})">Delete</button>
+                </div>
+            `)
+            .join('');
+    }
+
+    updateKnowledgeSummary() {
+        if (!this.knowledgeSummaryContent) return;
+
+        if (!this.knowledge) {
+            this.knowledgeSummaryContent.innerHTML = '<div style="color: var(--text-secondary); text-align: center;">No knowledge base yet. Upload files to get started! 📚</div>';
+            return;
+        }
+
+        const items = this.knowledge.split('\n').filter(item => item.trim()).slice(0, 5);
+        const html = items.map((item, idx) => `
+            <div class="knowledge-item">
+                <span class="knowledge-item-text">${this.escapeHtml(item.substring(0, 40))}</span>
+            </div>
+        `).join('');
+
+        this.knowledgeSummaryContent.innerHTML = html || '<div style="color: var(--text-secondary);">No content available</div>';
+    }
+
+    clearAllLogs() {
+        if (confirm('Are you sure you want to delete all activity logs for this student?')) {
+            this.activityLog = [];
+            const studentKey = `student_${this.currentStudent}_${this.currentGrade}`;
+            localStorage.setItem(`${studentKey}_logs`, JSON.stringify([]));
+            this.displayActivityLogs();
+            this.showNotification('All logs cleared', 'success');
+        }
     }
 
     // ==================== FILE UPLOAD & PARSING ====================
@@ -154,18 +347,29 @@ class AITutor {
     }
 
     processUploadedContent(content, fileName) {
+        if (!this.currentStudent || !this.currentGrade) {
+            this.showNotification('Please create a student profile first!', 'error');
+            return;
+        }
+
         // Extract test questions if it looks like a test paper
         this.testQuestions = this.extractTestQuestions(content);
         this.knowledge = content;
 
-        // Store in localStorage
-        localStorage.setItem('tutor_knowledge', content);
-        localStorage.setItem('tutor_test_questions', JSON.stringify(this.testQuestions));
+        // Store in student-specific localStorage
+        const studentKey = `student_${this.currentStudent}_${this.currentGrade}`;
+        localStorage.setItem(`${studentKey}_knowledge`, content);
+        localStorage.setItem(`${studentKey}_tests`, JSON.stringify(this.testQuestions));
+
+        // Add activity log
+        this.addActivityLog(`📤 Uploaded: ${fileName}`, `${this.testQuestions.length} questions found`);
 
         this.fileStatus.textContent = `✅ Loaded ${fileName} (${this.testQuestions.length} questions found)`;
         this.fileStatus.className = 'file-status success';
 
-        this.addAIMessage(`📚 Great! I've loaded your "${fileName}". Found ${this.testQuestions.length} practice questions. Ready to test your knowledge!`);
+        this.addAIMessage(`📚 Great! I've loaded your "${fileName}" for ${this.currentStudent} (Grade ${this.currentGrade}). Found ${this.testQuestions.length} practice questions. Ready to test your knowledge!`);
+        
+        this.updateKnowledgeSummary();
     }
 
     extractTestQuestions(content) {
@@ -213,12 +417,23 @@ class AITutor {
             return;
         }
 
+        if (!this.currentStudent || !this.currentGrade) {
+            this.showNotification('Please create a student profile first!', 'error');
+            return;
+        }
+
         this.studentGoal = { name, subject, date };
-        localStorage.setItem('tutor_goal', JSON.stringify(this.studentGoal));
+        
+        // Store goal in student profile
+        const studentKey = `student_${this.currentStudent}_${this.currentGrade}`;
+        localStorage.setItem(`${studentKey}_goal`, JSON.stringify(this.studentGoal));
+
+        // Add activity log
+        this.addActivityLog(`🎯 Goal Set: ${subject}`, `Exam on ${new Date(date).toLocaleDateString()}`);
 
         const message = `🎯 Alright ${name}, let's prepare for your ${subject} exam on ${new Date(date).toLocaleDateString()}! I'll help you master this subject. Let's get started!`;
         this.addAIMessage(message);
-        this.aiStatus.textContent = `Helping ${name} with ${subject}`;
+        this.aiStatus.textContent = `Helping ${name} (Grade ${this.currentGrade}) with ${subject}`;
 
         this.showNotification(`Goal set! Ready to prepare you for ${subject}!`, 'success');
     }
@@ -241,6 +456,11 @@ class AITutor {
 
     // ==================== TEST MODE ====================
     startTestMode() {
+        if (!this.currentStudent) {
+            this.showNotification('Please create a student profile first!', 'error');
+            return;
+        }
+
         if (this.testQuestions.length === 0) {
             this.addAIMessage("📝 I don't have any test questions yet. Please upload a test paper or enter test content first!");
             return;
@@ -248,6 +468,7 @@ class AITutor {
 
         this.testMode = true;
         this.currentTestIndex = 0;
+        this.addActivityLog(`📝 Started Test Mode`, `${this.testQuestions.length} questions`);
         this.practiceBtnQuick.classList.add('active');
         this.addAIMessage(translations[this.currentLanguage].startTest);
         this.displayTestQuestion();
@@ -352,6 +573,11 @@ class AITutor {
 
     // ==================== MESSAGE HANDLING ====================
     feedKnowledge() {
+        if (!this.currentStudent || !this.currentGrade) {
+            this.showNotification('Please create a student profile first!', 'error');
+            return;
+        }
+
         const content = this.reviewerContent.value.trim();
         if (!content) {
             this.showNotification('Please paste some content first!', 'error');
@@ -366,6 +592,12 @@ class AITutor {
         const message = this.messageInput.value.trim();
         if (!message) return;
 
+        if (!this.currentStudent || !this.currentGrade) {
+            this.addAIMessage('⚠️ Please create a student profile first to start chatting!');
+            return;
+        }
+
+        this.addActivityLog(`💬 Message Sent`, message.substring(0, 50));
         this.addUserMessage(message);
         this.messageInput.value = '';
 

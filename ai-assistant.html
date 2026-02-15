@@ -24,10 +24,32 @@
                 <p class="subtitle">Your personalized learning assistant</p>
             </div>
 
+            <!-- Student Selection -->
+            <div class="student-section">
+                <h3>👤 Student Profile</h3>
+                <div class="student-input-group">
+                    <input type="text" id="studentName" placeholder="Enter student name" class="input-field">
+                    <select id="studentGrade" class="input-field">
+                        <option value="">Select Grade Level</option>
+                        <option value="grade1">Grade 1</option>
+                        <option value="grade2">Grade 2</option>
+                        <option value="grade3">Grade 3</option>
+                        <option value="grade4">Grade 4</option>
+                        <option value="grade5">Grade 5</option>
+                        <option value="grade6">Grade 6</option>
+                        <option value="highschool">High School</option>
+                        <option value="college">College</option>
+                    </select>
+                    <button id="createStudentBtn" class="btn-action glow-btn">Create Profile 👤</button>
+                </div>
+                <div id="currentStudent" class="current-student">
+                    <p>No student selected</p>
+                </div>
+            </div>
+
             <!-- Goal Setting -->
             <div class="goal-setting">
                 <h3>📍 Learning Goal</h3>
-                <input type="text" id="studentName" placeholder="What's your name?" class="input-field">
                 <select id="examSubject" class="input-field">
                     <option value="">Select Subject to Study</option>
                     <option value="math">Mathematics</option>
@@ -37,7 +59,7 @@
                     <option value="history">History</option>
                     <option value="custom">Custom Subject</option>
                 </select>
-                <input type="text" id="examDate" placeholder="When is your exam?" class="input-field" type="date">
+                <input type="date" id="examDate" class="input-field">
                 <button id="setGoalBtn" class="btn-action glow-btn">Set Learning Goal 🎯</button>
             </div>
 
@@ -55,7 +77,7 @@
             <div class="file-upload-area">
                 <h3>📄 Upload Study Materials</h3>
                 <div class="upload-zone" id="uploadZone">
-                    <input type="file" id="fileInput" accept=".txt,.pdf,.png,.jpg,.jpeg" hidden>
+                    <input type="file" id="fileInput" accept=".txt,.pdf,.png,.jpg,.jpeg,.gif" hidden>
                     <p>📤 Drag files here or click to upload</p>
                     <small>Test papers, notes, PDFs, or images</small>
                 </div>
@@ -75,17 +97,9 @@
                     Feed Knowledge
                 </button>
             </div>
-
-            <!-- Knowledge Status -->
-            <div class="knowledge-status">
-                <h3>📖 Active Knowledge</h3>
-                <div id="knowledgeDisplay" class="knowledge-display">
-                    <p class="empty-state">No materials loaded yet</p>
-                </div>
-            </div>
         </div>
 
-        <!-- Right Panel: AI Tutor -->
+        <!-- Center Panel: Chat & AI -->
         <div class="assistant-panel">
             <!-- AI Avatar -->
             <div class="ai-avatar">
@@ -101,7 +115,7 @@
                 <div id="chatMessages" class="chat-messages">
                     <div class="welcome-message">
                         <h2>Kumusta! Welcome! 👋</h2>
-                        <p>I'm your AI Tutor. Set your learning goal, upload your study materials, and I'll help you prepare for your exam with explanations in English, Tagalog, and Bisaya!</p>
+                        <p>I'm your AI Tutor. Create a student profile, upload your study materials, and I'll help you prepare for your exam with explanations in English, Tagalog, and Bisaya!</p>
                     </div>
                 </div>
             </div>
@@ -150,6 +164,25 @@
                     <input type="checkbox" id="autoCorrecting" checked>
                     Auto-Correct Tests
                 </label>
+            </div>
+        </div>
+
+        <!-- Right Panel: Activity Logs -->
+        <div class="logs-panel">
+            <div class="logs-header">
+                <h3>📋 Activity Logs</h3>
+                <button id="clearLogsBtn" class="btn-clear-logs" title="Clear all logs">🗑️</button>
+            </div>
+            <div id="activityLogs" class="activity-logs">
+                <p class="empty-logs">No activity yet</p>
+            </div>
+
+            <!-- Knowledge Summary -->
+            <div class="knowledge-summary">
+                <h3>📚 Stored Knowledge</h3>
+                <div id="knowledgeSummary" class="knowledge-summary-content">
+                    <p class="empty-state">No materials stored</p>
+                </div>
             </div>
         </div>
     </div>
