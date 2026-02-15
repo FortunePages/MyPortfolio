@@ -205,15 +205,50 @@ class AITutor {
         }
     }
 
+    /**
+     * Load student data safely with validation
+     */
     loadStudentData() {
-        if (!this.currentStudent || !this.currentGrade) return;
+        if (!this.currentStudent || !this.currentGrade) {
+            console.warn('[LOAD DATA] No student profile selected');
+            return;
+        }
 
-        const studentKey = `student_${this.currentStudent}_${this.currentGrade}`;
-        this.knowledge = localStorage.getItem(`${studentKey}_knowledge`) || '';
-        this.activityLog = JSON.parse(localStorage.getItem(`${studentKey}_logs`) || '[]');
+        try {
+            console.log(`[LOAD DATA] Loading data for: ${this.currentStudent} (${this.currentGrade})`);
 
-        this.displayActivityLogs();
-        this.updateKnowledgeSummary();
+            const studentKey = `student_${this.currentStudent}_${this.currentGrade}`;
+            const knowledgeKey = `${studentKey}_knowledge`;
+            const logsKey = `${studentKey}_logs`;
+
+            // Load knowledge with validation
+            const knowledge = localStorage.getItem(knowledgeKey);
+            if (knowledge && typeof knowledge === 'string' && knowledge.length > 0) {
+                this.knowledge = knowledge;
+                console.log(`[LOAD DATA] ✅ Knowledge loaded (${knowledge.length} chars)`);
+            } else {
+                this.knowledge = '';
+                console.log('[LOAD DATA] ⚠️ No knowledge available');
+            }
+
+            // Load activity logs with validation
+            try {
+                const logs = localStorage.getItem(logsKey);
+                this.activityLog = logs ? JSON.parse(logs) : [];
+                console.log(`[LOAD DATA] ✅ Activity logs loaded (${this.activityLog.length} entries)`);
+            } catch (parseError) {
+                console.error('[LOAD DATA] ❌ Error parsing logs:', parseError);
+                this.activityLog = [];
+            }
+
+            this.displayActivityLogs();
+            this.updateKnowledgeSummary();
+            console.log('[LOAD DATA] ✅ Data loading complete');
+
+        } catch (error) {
+            console.error('[LOAD DATA] ❌ Error loading student data:', error);
+            this.showNotification('Error loading student data', 'error');
+        }
     }
 
     updateStudentDisplay() {
@@ -315,17 +350,215 @@ class AITutor {
         }
     }
 
-    // ==================== FILE UPLOAD & PARSING ====================
-    handleFileUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const content = e.target.result;
-            this.processUploadedContent(content, file.name);
+    // ==================== FILE UPLOAD & PARSING (REFACTORED) ====================
+    
+    /**
+     * Configuration for allowed file types
+     */
+    getAllowedFileTypes() {
+        return {
+            '.txt': 'text/plain',
+            '.md': 'text/markdown',
+            '.csv': 'text/csv'
         };
-        reader.readAsText(file);
+    }
+
+    /**
+     * Validates file type and size
+     * @param {File} file - File to validate
+     * @returns {Object} { valid: boolean, error: string }
+     */
+    validateFileType(file) {
+        console.log(`[FILE VALIDATION] Checking file: ${file.name}, Type: ${file.type}, Size: ${file.size} bytes`);
+
+        // Get file extension
+        const fileName = file.name.toLowerCase();
+        const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+        const allowedTypes = this.getAllowedFileTypes();
+
+        // Check extension
+        if (!allowedTypes[fileExtension]) {
+            const error = `❌ Unsupported file type: ${fileExtension}. Allowed: ${Object.keys(allowedTypes).join(', ')}`;
+            console.warn(`[FILE VALIDATION] ${error}`);
+            return { valid: false, error };
+        }
+
+        // Check file size (max 5MB)
+        const MAX_SIZE = 5 * 1024 * 1024;
+        if (file.size > MAX_SIZE) {
+            const error = `❌ File too large. Maximum size: 5MB, Your file: ${(file.size / 1024 / 1024).toFixed(2)}MB`;
+            console.warn(`[FILE VALIDATION] ${error}`);
+            return { valid: false, error };
+        }
+
+        console.log(`[FILE VALIDATION] ✅ File passed validation`);
+        return { valid: true };
+    }
+
+    /**
+     * Checks for binary file signatures/magic numbers
+     * @param {string} content - File content
+     * @returns {Object} { isBinary: boolean, signature: string }
+     */
+    detectBinaryData(content) {
+        const binarySignatures = {
+            'PNG': '\x89PNG',
+            'JPEG': '\xFF\xD8\xFF',
+            'GIF': 'GIF87a|GIF89a',
+            'PDF': '%PDF',
+            'ZIP': 'PK\x03\x04',
+            'JFIF': '\xFF\xE0'
+        };
+
+        for (const [format, signature] of Object.entries(binarySignatures)) {
+            if (content.includes(signature)) {
+                console.warn(`[BINARY DETECTION] ⚠️ Detected ${format} signature - likely binary file`);
+                return { isBinary: true, signature: format };
+            }
+        }
+
+        // Check for null bytes (common in binary)
+        if (content.includes('\x00')) {
+            console.warn(`[BINARY DETECTION] ⚠️ Detected null bytes - likely binary file`);
+            return { isBinary: true, signature: 'NULL_BYTES' };
+        }
+
+        console.log(`[BINARY DETECTION] ✅ No binary signatures detected`);
+        return { isBinary: false };
+    }
+
+    /**
+     * Sanitizes text content to prevent corruption
+     * @param {string} content - Raw content
+     * @returns {string} Cleaned content
+     */
+    sanitizeTextContent(content) {
+        console.log(`[SANITIZATION] Starting sanitization - initial length: ${content.length}`);
+
+        if (!content || typeof content !== 'string') {
+            console.error(`[SANITIZATION] ❌ Invalid content type`);
+            return '';
+        }
+
+        // Remove control characters except common whitespace
+        let sanitized = content
+            .split('')
+            .filter(char => {
+                const code = char.charCodeAt(0);
+                // Keep: letters, numbers, spaces, common punctuation, newlines, tabs
+                return (code >= 32 && code <= 126) || code === 9 || code === 10 || code === 13 || code > 127;
+            })
+            .join('');
+
+        // Normalize line endings to \n
+        sanitized = sanitized.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+        // Remove excessive whitespace
+        sanitized = sanitized.replace(/\n{3,}/g, '\n\n');
+
+        console.log(`[SANITIZATION] ✅ Sanitization done - final length: ${sanitized.length}`);
+        return sanitized;
+    }
+
+    /**
+     * Safe file reading with error handling
+     * @param {File} file - File to read
+     * @returns {Promise<string>} File content
+     */
+    readFileAsText(file) {
+        return new Promise((resolve, reject) => {
+            console.log(`[FILE READING] Starting to read file: ${file.name}`);
+
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                try {
+                    let content = e.target.result;
+                    console.log(`[FILE READING] Raw content received - ${content.length} characters`);
+
+                    // Check for binary data
+                    const binary = this.detectBinaryData(content);
+                    if (binary.isBinary) {
+                        throw new Error(`Binary file detected (${binary.signature}). Only text files are supported.`);
+                    }
+
+                    // Sanitize content
+                    content = this.sanitizeTextContent(content);
+
+                    if (!content.trim()) {
+                        throw new Error('File is empty after processing');
+                    }
+
+                    console.log(`[FILE READING] ✅ File read successfully`);
+                    resolve(content);
+                } catch (error) {
+                    console.error(`[FILE READING] ❌ Error:`, error);
+                    reject(error);
+                }
+            };
+
+            reader.onerror = (error) => {
+                console.error(`[FILE READING] ❌ FileReader error:`, error);
+                reject(new Error('Failed to read file'));
+            };
+
+            reader.onabort = () => {
+                console.warn(`[FILE READING] ⚠️ File reading was aborted`);
+                reject(new Error('File reading was cancelled'));
+            };
+
+            // Start reading with error handling
+            try {
+                reader.readAsText(file, 'UTF-8');
+            } catch (error) {
+                console.error(`[FILE READING] ❌ Error initiating read:`, error);
+                reject(error);
+            }
+        });
+    }
+
+    /**
+     * Handles file upload with full validation
+     * @param {Event} event - Upload event
+     */
+    async handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) {
+            console.log('[FILE UPLOAD] No file selected');
+            return;
+        }
+
+        console.log(`[FILE UPLOAD] Starting upload for: ${file.name}`);
+
+        // Validate file type
+        const validation = this.validateFileType(file);
+        if (!validation.valid) {
+            this.fileStatus.textContent = validation.error;
+            this.fileStatus.className = 'file-status error';
+            this.showNotification(validation.error, 'error');
+            return;
+        }
+
+        try {
+            this.fileStatus.textContent = '⏳ Reading file...';
+            this.fileStatus.className = 'file-status loading';
+
+            // Read file safely
+            const content = await this.readFileAsText(file);
+
+            // Process content
+            await this.processUploadedContent(content, file.name);
+
+        } catch (error) {
+            const errorMsg = `❌ Error processing file: ${error.message}`;
+            console.error(`[FILE UPLOAD]`, error);
+            this.fileStatus.textContent = errorMsg;
+            this.fileStatus.className = 'file-status error';
+            this.showNotification(errorMsg, 'error');
+        }
+
+        // Reset file input
+        event.target.value = '';
     }
 
     handleDragOver(e) {
@@ -342,35 +575,130 @@ class AITutor {
         e.preventDefault();
         this.uploadZone.classList.remove('drag-over');
         const file = e.dataTransfer.files[0];
+        if (!file) return;
+
         this.fileInput.files = e.dataTransfer.files;
         this.handleFileUpload({ target: { files: [file] } });
     }
 
-    processUploadedContent(content, fileName) {
+    /**
+     * Store knowledge safely with validation
+     * @param {string} content - Content to store
+     * @param {string} fileName - File name for reference
+     */
+    storeKnowledgeSafely(content, fileName) {
+        console.log(`[STORAGE] Attempting to store knowledge from: ${fileName}`);
+
         if (!this.currentStudent || !this.currentGrade) {
-            this.showNotification('Please create a student profile first!', 'error');
-            return;
+            console.error('[STORAGE] ❌ No student profile - cannot store');
+            throw new Error('No active student profile');
         }
 
-        // Extract test questions if it looks like a test paper
-        this.testQuestions = this.extractTestQuestions(content);
-        this.knowledge = content;
+        // Validate content
+        if (!content || typeof content !== 'string') {
+            console.error('[STORAGE] ❌ Invalid content type');
+            throw new Error('Invalid content');
+        }
 
-        // Store in student-specific localStorage
+        if (content.trim().length === 0) {
+            console.error('[STORAGE] ❌ Content is empty');
+            throw new Error('Content cannot be empty');
+        }
+
+        // Create safe storage key
         const studentKey = `student_${this.currentStudent}_${this.currentGrade}`;
-        localStorage.setItem(`${studentKey}_knowledge`, content);
-        localStorage.setItem(`${studentKey}_tests`, JSON.stringify(this.testQuestions));
+        const knowledgeKey = `${studentKey}_knowledge`;
 
-        // Add activity log
-        this.addActivityLog(`📤 Uploaded: ${fileName}`, `${this.testQuestions.length} questions found`);
+        // Check if we're about to overwrite existing data
+        const existingData = localStorage.getItem(knowledgeKey);
+        if (existingData && existingData.length > 0) {
+            console.log(`[STORAGE] ⚠️ Overwriting existing knowledge (${existingData.length} chars)`);
+        }
 
-        this.fileStatus.textContent = `✅ Loaded ${fileName} (${this.testQuestions.length} questions found)`;
-        this.fileStatus.className = 'file-status success';
+        try {
+            // Store with metadata
+            const metadata = {
+                fileName: fileName,
+                uploadTime: new Date().toISOString(),
+                contentLength: content.length,
+                contentHash: this.hashContent(content)
+            };
 
-        this.addAIMessage(`📚 Great! I've loaded your "${fileName}" for ${this.currentStudent} (Grade ${this.currentGrade}). Found ${this.testQuestions.length} practice questions. Ready to test your knowledge!`);
-        
-        this.updateKnowledgeSummary();
+            localStorage.setItem(knowledgeKey, content);
+            localStorage.setItem(`${knowledgeKey}_meta`, JSON.stringify(metadata));
+
+            console.log(`[STORAGE] ✅ Knowledge stored successfully (${content.length} chars)`);
+            console.log(`[STORAGE] Metadata:`, metadata);
+
+            return { success: true, metadata };
+        } catch (error) {
+            console.error('[STORAGE] ❌ localStorage error:', error);
+            if (error.name === 'QuotaExceededError') {
+                throw new Error('Storage quota exceeded - clear some old data');
+            }
+            throw error;
+        }
     }
+
+    /**
+     * Simple hash for content verification
+     * @param {string} content - Content to hash
+     * @returns {string} Simple hash
+     */
+    hashContent(content) {
+        let hash = 0;
+        for (let i = 0; i < content.length; i++) {
+            const char = content.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return hash.toString(16);
+    }
+
+    processUploadedContent(content, fileName) {
+        console.log(`[PROCESS] Starting to process: ${fileName}`);
+
+        try {
+            if (!this.currentStudent || !this.currentGrade) {
+                throw new Error('Please create a student profile first!');
+            }
+
+            // Additional binary check
+            const binary = this.detectBinaryData(content);
+            if (binary.isBinary) {
+                throw new Error(`Binary signature detected: ${binary.signature}`);
+            }
+
+            // Extract test questions
+            console.log('[PROCESS] Extracting test questions...');
+            this.testQuestions = this.extractTestQuestions(content);
+            console.log(`[PROCESS] Found ${this.testQuestions.length} test questions`);
+
+            // Store knowledge safely
+            const result = this.storeKnowledgeSafely(content, fileName);
+            this.knowledge = content;
+
+            // Store tests separately
+            const studentKey = `student_${this.currentStudent}_${this.currentGrade}`;
+            localStorage.setItem(`${studentKey}_tests`, JSON.stringify(this.testQuestions));
+
+            // Add activity log
+            this.addActivityLog(`📤 Uploaded: ${fileName}`, `${this.testQuestions.length} questions found`);
+
+            // Update UI
+            this.fileStatus.textContent = `✅ Loaded ${fileName} (${this.testQuestions.length} questions found)`;
+            this.fileStatus.className = 'file-status success';
+
+            this.addAIMessage(`📚 Perfect! I've safely loaded your "${fileName}" for ${this.currentStudent} (Grade ${this.currentGrade}). Found ${this.testQuestions.length} practice questions. Ready to help! 🎯`);
+
+            this.updateKnowledgeSummary();
+
+            console.log(`[PROCESS] ✅ Processing complete`);
+
+        } catch (error) {
+            console.error(`[PROCESS] ❌ Error:`, error);
+            this.showNotification(error.message || 'Error processing file', 'error');
+        }
 
     extractTestQuestions(content) {
         // Parse numbered questions with multiple choice answers
@@ -573,35 +901,63 @@ class AITutor {
 
     // ==================== MESSAGE HANDLING ====================
     feedKnowledge() {
+        console.log('[FEED] Starting to feed knowledge from pasted content');
+
         if (!this.currentStudent || !this.currentGrade) {
+            console.error('[FEED] ❌ No student profile');
             this.showNotification('Please create a student profile first!', 'error');
             return;
         }
 
         const content = this.reviewerContent.value.trim();
         if (!content) {
+            console.warn('[FEED] ⚠️ Empty content');
             this.showNotification('Please paste some content first!', 'error');
             return;
         }
 
-        this.processUploadedContent(content, "Pasted Content");
-        this.reviewerContent.value = '';
+        try {
+            console.log(`[FEED] Processing ${content.length} characters of content`);
+            this.processUploadedContent(content, "Pasted Content");
+            this.reviewerContent.value = '';
+            console.log('[FEED] ✅ Content fed successfully');
+        } catch (error) {
+            console.error('[FEED] ❌ Error:', error);
+            this.showNotification(error.message || 'Error feeding content', 'error');
+        }
     }
 
+    /**
+     * Send user message with validation
+     */
     sendMessage() {
         const message = this.messageInput.value.trim();
-        if (!message) return;
+        
+        if (!message) {
+            console.log('[MESSAGE] Empty message - ignoring');
+            return;
+        }
+
+        console.log(`[MESSAGE] Sending message: "${message}"`);
 
         if (!this.currentStudent || !this.currentGrade) {
+            console.warn('[MESSAGE] ❌ No student profile');
             this.addAIMessage('⚠️ Please create a student profile first to start chatting!');
             return;
         }
 
-        this.addActivityLog(`💬 Message Sent`, message.substring(0, 50));
-        this.addUserMessage(message);
-        this.messageInput.value = '';
+        try {
+            this.addActivityLog(`💬 Message Sent`, message.substring(0, 50));
+            this.addUserMessage(message);
+            this.messageInput.value = '';
 
-        setTimeout(() => this.generateAIResponse(message), 500);
+            // Async safety: small delay ensures UI updates
+            setTimeout(() => this.generateAIResponse(message), 300);
+            console.log('[MESSAGE] ✅ Message processed');
+        } catch (error) {
+            console.error('[MESSAGE] ❌ Error sending message:', error);
+            this.showNotification('Error sending message', 'error');
+        }
     }
 
     addUserMessage(text) {
@@ -620,29 +976,114 @@ class AITutor {
         this.scrollToBottom();
     }
 
+    /**
+     * Generate AI response asynchronously with error handling
+     * @param {string} userMessage - User's message
+     */
     generateAIResponse(userMessage) {
+        console.log(`[AI RESPONSE] Generating response for: "${userMessage.substring(0, 50)}..."`);
         this.showTypingIndicator();
 
+        // Async safety: delay ensures UI renders properly
+        const responseDelay = 800 + Math.random() * 1200;
         setTimeout(() => {
-            this.removeTypingIndicator();
-            const response = this.generateResponse(userMessage);
-            this.addAIMessage(response);
+            try {
+                this.removeTypingIndicator();
+                const response = this.generateResponse(userMessage);
+                
+                if (!response || response.trim().length === 0) {
+                    console.error('[AI RESPONSE] ❌ Empty response generated');
+                    throw new Error('Response generation failed');
+                }
 
-            if (this.voiceOutput.checked) {
-                this.speakResponse(response);
+                this.addAIMessage(response);
+                console.log(`[AI RESPONSE] ✅ Response sent`);
+
+                // Only speak if explicitly enabled
+                if (this.voiceOutput && this.voiceOutput.checked) {
+                    console.log('[AI RESPONSE] Speaking response...');
+                    this.speakResponse(response);
+                }
+            } catch (error) {
+                console.error('[AI RESPONSE] Error:', error);
+                this.addAIMessage('❌ I encountered an issue generating a response. Please try again.');
             }
-        }, 800 + Math.random() * 1200);
+        }, responseDelay);
     }
 
+    /**
+     * Generate response with fallback handling
+     * Uses knowledge base if available, otherwise provides generic guidance
+     * @param {string} userMessage - User's message
+     * @returns {string} AI response
+     */
     generateResponse(userMessage) {
+        console.log(`[GENERATE] Creating response...`);
+        console.log(`[GENERATE] Knowledge available: ${this.knowledge.length} chars`);
+        console.log(`[GENERATE] Message: "${userMessage}"`);
+
+        try {
+            // Check if knowledge base exists
+            if (!this.knowledge || this.knowledge.trim().length === 0) {
+                console.log('[GENERATE] ⚠️ No knowledge base - using default response');
+                return this.getDefaultResponse(userMessage);
+            }
+
+            // Get a knowledge-aware response
+            return this.getKnowledgeAwareResponse(userMessage);
+        } catch (error) {
+            console.error('[GENERATE] ❌ Error in generateResponse:', error);
+            return this.getDefaultResponse(userMessage);
+        }
+    }
+
+    /**
+     * Get response based on knowledge base
+     * @param {string} userMessage - User's message
+     * @returns {string} Knowledge-aware response
+     */
+    getKnowledgeAwareResponse(userMessage) {
+        console.log('[KNOWLEDGE] Generating knowledge-aware response');
+        
+        // Extract keywords from user message
+        const keywords = userMessage.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+        console.log(`[KNOWLEDGE] Keywords: ${keywords.join(', ')}`);
+
+        // Find relevant content segments
+        const knowledgeLines = this.knowledge.split('\n').filter(line => line.trim().length > 0);
+        const relevantLines = knowledgeLines.filter(line => {
+            const lineLower = line.toLowerCase();
+            return keywords.some(keyword => lineLower.includes(keyword));
+        }).slice(0, 2);
+
+        if (relevantLines.length > 0) {
+            console.log('[KNOWLEDGE] ✅ Found relevant content');
+            return `Based on your materials: ${relevantLines[0].substring(0, 60)}... This relates to what you're studying. Keep practicing these concepts! 📚`;
+        }
+
+        console.log('[KNOWLEDGE] ⚠️ No relevant content found - using generic response');
+        return this.getDefaultResponse(userMessage);
+    }
+
+    /**
+     * Get generic response as fallback
+     * @param {string} userMessage - User's message
+     * @returns {string} Generic response
+     */
+    getDefaultResponse(userMessage) {
+        console.log('[DEFAULT] Using default response template');
+        
         const responses = [
-            `I can help with that! "${userMessage.substring(0, 20)}..." is important. Let me explain: Based on what you should learn, this topic requires understanding the basics first. Practice with me! 📖`,
-            `That's an intelligent question! To understand this better: Follow the fundamentals, practice exercises, and review before your exam. You're on the right track! 💡`,
-            `Excellent thinking! Here's what you should focus on: Break it down into smaller parts, understand each concept deeply, and relate it to real-world examples. 🎯`,
-            `I can see you're motivated! Keep this energy up and you'll definitely excel! Do you want to take a practice test to apply what you've learned? 🌟`
+            `Great question about "${userMessage.substring(0, 20)}..."! To master this, break it down into smaller parts, understand each concept deeply, and practice regularly. 📖`,
+            `That's an intelligent question! The key to understanding this is: follow the fundamentals, do practice exercises, and review before your exam. You're on the right track! 💡`,
+            `Excellent thinking! Here's my advice: understand the core concepts first, then practice similar problems. This approach helps most students excel! 🎯`,
+            `I can see you're motivated! Keep this energy and focus on consistent practice. Do you want to take a practice test to apply what you've learned? 🌟`,
+            `Good question! Remember: "Practice makes perfect." Focus on understanding the WHY behind each concept, not just memorizing. You've got this! 💪`
         ];
 
-        return responses[Math.floor(Math.random() * responses.length)];
+        const response = responses[Math.floor(Math.random() * responses.length)];
+        console.log('[DEFAULT] Selected response template');
+        return response;
     }
 
     // ==================== SPEECH ====================
@@ -748,12 +1189,219 @@ class AITutor {
             notification.remove();
         }, 3000);
     }
+
+    // ==================== DEBUGGING & DIAGNOSTICS ====================
+    /**
+     * Get comprehensive system diagnostics
+     * @returns {Object} Diagnostic report
+     */
+    getDiagnostics() {
+        try {
+            const diagnostics = {
+                timestamp: new Date().toISOString(),
+                student: {
+                    name: this.currentStudent,
+                    grade: this.currentGrade
+                },
+                knowledge: {
+                    loaded: this.knowledge.length > 0,
+                    length: this.knowledge.length,
+                    hash: this.knowledge.length > 0 ? this.hashContent(this.knowledge) : null,
+                    linesCount: this.knowledge.split('\n').length
+                },
+                tests: {
+                    count: this.testQuestions.length,
+                    sample: this.testQuestions.slice(0, 1)
+                },
+                logs: {
+                    count: this.activityLog.length,
+                    recent: this.activityLog.slice(-3)
+                },
+                storage: {
+                    available: this.checkStorageAvailable(),
+                    used: this.estimateStorageUsed()
+                },
+                ai: {
+                    language: this.currentLanguage,
+                    testMode: this.testMode,
+                    listeningState: this.isListening
+                }
+            };
+
+            console.log('[DIAGNOSTICS] System Report:', diagnostics);
+            return diagnostics;
+        } catch (error) {
+            console.error('[DIAGNOSTICS] ❌ Error:', error);
+            return { error: error.message };
+        }
+    }
+
+    /**
+     * Check if localStorage is available
+     * @returns {boolean} Storage availability
+     */
+    checkStorageAvailable() {
+        try {
+            const test = '__storage_test__';
+            localStorage.setItem(test, test);
+            localStorage.removeItem(test);
+            return true;
+        } catch (error) {
+            console.warn('[STORAGE] ⚠️ Storage not available:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Estimate total storage used
+     * @returns {string} Storage estimate
+     */
+    estimateStorageUsed() {
+        let total = 0;
+        for (let key in localStorage) {
+            if (localStorage.hasOwnProperty(key)) {
+                total += localStorage[key].length + key.length;
+            }
+        }
+        const sizeInKB = (total / 1024).toFixed(2);
+        console.log(`[STORAGE] Estimated usage: ${sizeInKB}KB`);
+        return `${sizeInKB}KB`;
+    }
+
+    /**
+     * Validate all stored data for integrity
+     * @returns {Object} Validation report
+     */
+    validateStorageIntegrity() {
+        console.log('[VALIDATE] Starting storage integrity check...');
+        
+        const report = {
+            timestamp: new Date().toISOString(),
+            allKeys: [],
+            validentries: 0,
+            errors: [],
+            warnings: []
+        };
+
+        try {
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+
+                report.allKeys.push(key);
+
+                // Validate format
+                if (key.includes('_logs')) {
+                    try {
+                        JSON.parse(value);
+                        report.validentries++;
+                    } catch (e) {
+                        report.errors.push(`Invalid JSON in ${key}`);
+                    }
+                } else if (key.includes('_knowledge')) {
+                    if (!value || value.length === 0) {
+                        report.warnings.push(`Empty knowledge base: ${key}`);
+                    } else if (value.length > 10 * 1024 * 1024) {
+                        report.errors.push(`Knowledge base too large: ${key} (${value.length} bytes)`);
+                    } else {
+                        report.validentries++;
+                    }
+                } else {
+                    report.validentries++;
+                }
+            }
+
+            console.log('[VALIDATE] ✅ Integrity check complete:', report);
+            return report;
+        } catch (error) {
+            console.error('[VALIDATE] ❌ Error:', error);
+            report.errors.push(`Validation error: ${error.message}`);
+            return report;
+        }
+    }
+
+    /**
+     * Clear corrupted data safely
+     * @param {string} key - Storage key to clear
+     */
+    clearCorruptedData(key) {
+        try {
+            console.warn(`[CLEANUP] Removing corrupted data: ${key}`);
+            localStorage.removeItem(key);
+            console.log('[CLEANUP] ✅ Cleaned up successfully');
+        } catch (error) {
+            console.error('[CLEANUP] ❌ Error:', error);
+        }
+    }
+
+    /**
+     * Export current session data for debugging
+     * @returns {string} JSON export
+     */
+    exportSessionData() {
+        const data = {
+            export_time: new Date().toISOString(),
+            student: this.currentStudent,
+            grade: this.currentGrade,
+            knowledge_length: this.knowledge.length,
+            activity_logs_count: this.activityLog.length,
+            test_questions_count: this.testQuestions.length,
+            language: this.currentLanguage
+        };
+
+        const json = JSON.stringify(data, null, 2);
+        console.log('[EXPORT] Session Data:', json);
+        return json;
+    }
+
+    /**
+     * Log system information to console
+     */
+    logSystemInfo() {
+        console.log('%c🤖 AI TUTOR SYSTEM INFORMATION', 'color: #00d4ff; font-weight: bold; font-size: 14px');
+        console.log('%c=================================', 'color: #00ffcc');
+        console.group('Current Session');
+        console.log('Student:', this.currentStudent || 'Not set');
+        console.log('Grade:', this.currentGrade || 'Not set');
+        console.log('Language:', this.currentLanguage);
+        console.groupEnd();
+
+        console.group('Knowledge Base');
+        console.log('Size:', this.knowledge.length, 'characters');
+        console.log('Loaded:', this.knowledge.length > 0 ? '✅' : '❌');
+        console.groupEnd();
+
+        console.group('Test System');
+        console.log('Questions loaded:', this.testQuestions.length);
+        console.log('Test mode active:', this.testMode ? '✅' : '❌');
+        console.groupEnd();
+
+        console.group('Activity Tracking');
+        console.log('Log entries:', this.activityLog.length);
+        console.log('Recent:', this.activityLog.slice(-2));
+        console.groupEnd();
+
+        console.log('%c=================================', 'color: #00ffcc');
+    }
 }
 
 // ==================== INITIALIZE ====================
 let tutorInstance;
 document.addEventListener('DOMContentLoaded', () => {
-    tutorInstance = new AITutor();
-    console.log('🤖 AI Tutor Initialized!');
+    try {
+        tutorInstance = new AITutor();
+        console.log('🤖 AI Tutor Initialized Successfully!');
+        
+        // Log system info on startup
+        tutorInstance.logSystemInfo();
+        
+        // Run initial diagnostics
+        const initialDiagnostics = tutorInstance.getDiagnostics();
+        console.log('[INIT] Initial diagnostics:', initialDiagnostics);
+
+    } catch (error) {
+        console.error('❌ Initialization Error:', error);
+        alert('Failed to initialize AI Tutor. Please check console for details.');
+    }
 });
 
