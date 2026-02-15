@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Educational Reviewer Assistant</title>
+    <link rel="stylesheet" href="ai-assistant.css">
+</head>
+<body>
+    <!-- Background Elements -->
+    <div class="stars"></div>
+    <div class="floating-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Left Panel: Knowledge Base -->
+        <div class="knowledge-panel">
+            <div class="panel-header">
+                <h2>📚 Knowledge Base</h2>
+                <p class="subtitle">Feed your reviewer content</p>
+            </div>
+
+            <div class="subject-selector">
+                <label for="subject">Select Subject:</label>
+                <select id="subject">
+                    <option value="math">Mathematics</option>
+                    <option value="science">Science</option>
+                    <option value="history">History</option>
+                    <option value="english">English</option>
+                    <option value="custom">Custom Subject</option>
+                </select>
+            </div>
+
+            <div class="content-input-area">
+                <label for="reviewerContent">Paste Reviewer Content:</label>
+                <textarea id="reviewerContent" placeholder="Paste your study notes, reviewer content, or learning materials here..."></textarea>
+                <button id="feedBtn" class="btn-feed glow-btn">
+                    <span class="btn-icon">🧠</span>
+                    Feed Knowledge
+                </button>
+            </div>
+
+            <div class="knowledge-status">
+                <h3>Active Knowledge</h3>
+                <div id="knowledgeDisplay" class="knowledge-display">
+                    <p class="empty-state">No knowledge loaded yet</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: AI Assistant -->
+        <div class="assistant-panel">
+            <!-- AI Avatar -->
+            <div class="ai-avatar">
+                <div class="avatar-orb">
+                    <div class="orb-light"></div>
+                    <div class="orb-pulse"></div>
+                </div>
+                <p class="ai-status">Ready to learn</p>
+            </div>
+
+            <!-- Chat Container -->
+            <div class="chat-container">
+                <div id="chatMessages" class="chat-messages">
+                    <div class="welcome-message">
+                        <h2>Hey there! 👋</h2>
+                        <p>I'm your AI Educational Reviewer Assistant. Upload your study materials on the left, then ask me anything about them!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Controls -->
+            <div class="control-panel">
+                <!-- Voice Button -->
+                <button id="voiceBtn" class="voice-btn">
+                    <span class="mic-icon">🎤</span>
+                    <span class="pulse-ring"></span>
+                    <span class="pulse-ring"></span>
+                </button>
+
+                <!-- Text Input -->
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        id="messageInput" 
+                        placeholder="Ask me anything about your subjects..."
+                        autocomplete="off"
+                    >
+                    <button id="sendBtn" class="send-btn glow-btn">
+                        <span>✨</span>
+                    </button>
+                </div>
+
+                <!-- Voice Status -->
+                <div id="voiceStatus" class="voice-status"></div>
+            </div>
+
+            <!-- Settings -->
+            <div class="settings-panel">
+                <label>
+                    <input type="checkbox" id="voiceOutput" checked>
+                    Voice Output
+                </label>
+                <label>
+                    <input type="checkbox" id="darkMode" checked>
+                    Dark Mode
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script src="ai-assistant.js"></script>
+</body>
+</html>
