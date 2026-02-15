@@ -102,6 +102,10 @@ class AITutor {
         });
 
         // File upload
+        const insertFileBtn = document.getElementById('insertFileBtn');
+        if (insertFileBtn) {
+            insertFileBtn.addEventListener('click', () => this.fileInput.click());
+        }
         this.uploadZone.addEventListener('click', () => this.fileInput.click());
         this.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
         this.uploadZone.addEventListener('dragover', (e) => this.handleDragOver(e));
