@@ -444,6 +444,65 @@ footer p {
     margin: 0;
 }
 
+/* Projects Page */
+header {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, #00d4ff, #0099cc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: #1a2847;
+    margin-bottom: 2rem;
+    border-radius: 10px;
+    border-left: 5px solid #00d4ff;
+    box-shadow: 0 5px 20px rgba(0, 212, 255, 0.1);
+}
+
+section h2 {
+    color: #00d4ff;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+section ul {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+section ul li {
+    color: #a0a0a0;
+    margin-bottom: 0.8rem;
+    padding-left: 1.5rem;
+    position: relative;
+    line-height: 1.6;
+}
+
+section ul li:before {
+    content: "▸";
+    position: absolute;
+    left: 0;
+    color: #00d4ff;
+    font-weight: bold;
+}
+
+section p {
+    color: #b0b0b0;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .nav-menu {
