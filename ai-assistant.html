@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Educational Reviewer Assistant</title>
+    <title>AI Tutor - Smart Learning Assistant</title>
     <link rel="stylesheet" href="ai-assistant.css">
 </head>
 <body>
@@ -17,42 +17,71 @@
 
     <!-- Main Container -->
     <div class="container">
-        <!-- Left Panel: Knowledge Base -->
+        <!-- Left Panel: Learning Setup -->
         <div class="knowledge-panel">
             <div class="panel-header">
-                <h2>📚 Knowledge Base</h2>
-                <p class="subtitle">Feed your reviewer content</p>
+                <h2>📚 AI Tutor Setup</h2>
+                <p class="subtitle">Your personalized learning assistant</p>
             </div>
 
-            <div class="subject-selector">
-                <label for="subject">Select Subject:</label>
-                <select id="subject">
+            <!-- Goal Setting -->
+            <div class="goal-setting">
+                <h3>📍 Learning Goal</h3>
+                <input type="text" id="studentName" placeholder="What's your name?" class="input-field">
+                <select id="examSubject" class="input-field">
+                    <option value="">Select Subject to Study</option>
                     <option value="math">Mathematics</option>
                     <option value="science">Science</option>
-                    <option value="history">History</option>
                     <option value="english">English</option>
+                    <option value="tagalog">Tagalog</option>
+                    <option value="history">History</option>
                     <option value="custom">Custom Subject</option>
                 </select>
+                <input type="text" id="examDate" placeholder="When is your exam?" class="input-field" type="date">
+                <button id="setGoalBtn" class="btn-action glow-btn">Set Learning Goal 🎯</button>
             </div>
 
+            <!-- Language Preference -->
+            <div class="language-selector">
+                <h3>🌐 Language Preference</h3>
+                <div class="lang-buttons">
+                    <button class="lang-btn active" data-lang="en">English</button>
+                    <button class="lang-btn" data-lang="tl">Tagalog</button>
+                    <button class="lang-btn" data-lang="ceb">Bisaya</button>
+                </div>
+            </div>
+
+            <!-- File Upload -->
+            <div class="file-upload-area">
+                <h3>📄 Upload Study Materials</h3>
+                <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="fileInput" accept=".txt,.pdf,.png,.jpg,.jpeg" hidden>
+                    <p>📤 Drag files here or click to upload</p>
+                    <small>Test papers, notes, PDFs, or images</small>
+                </div>
+                <div id="fileStatus" class="file-status"></div>
+            </div>
+
+            <!-- Content Input -->
             <div class="content-input-area">
-                <label for="reviewerContent">Paste Reviewer Content:</label>
-                <textarea id="reviewerContent" placeholder="Paste your study notes, reviewer content, or learning materials here..."></textarea>
+                <label for="reviewerContent">Or Paste Content:</label>
+                <textarea id="reviewerContent" placeholder="Paste test questions, notes, or lessons..."></textarea>
                 <button id="feedBtn" class="btn-feed glow-btn">
                     <span class="btn-icon">🧠</span>
                     Feed Knowledge
                 </button>
             </div>
 
+            <!-- Knowledge Status -->
             <div class="knowledge-status">
-                <h3>Active Knowledge</h3>
+                <h3>📖 Active Knowledge</h3>
                 <div id="knowledgeDisplay" class="knowledge-display">
-                    <p class="empty-state">No knowledge loaded yet</p>
+                    <p class="empty-state">No materials loaded yet</p>
                 </div>
             </div>
         </div>
 
-        <!-- Right Panel: AI Assistant -->
+        <!-- Right Panel: AI Tutor -->
         <div class="assistant-panel">
             <!-- AI Avatar -->
             <div class="ai-avatar">
@@ -60,15 +89,15 @@
                     <div class="orb-light"></div>
                     <div class="orb-pulse"></div>
                 </div>
-                <p class="ai-status">Ready to learn</p>
+                <p class="ai-status" id="aiStatus">Ready to help! 👋</p>
             </div>
 
             <!-- Chat Container -->
             <div class="chat-container">
                 <div id="chatMessages" class="chat-messages">
                     <div class="welcome-message">
-                        <h2>Hey there! 👋</h2>
-                        <p>I'm your AI Educational Reviewer Assistant. Upload your study materials on the left, then ask me anything about them!</p>
+                        <h2>Kumusta! Welcome! 👋</h2>
+                        <p>I'm your AI Tutor. Set your learning goal, upload your study materials, and I'll help you prepare for your exam with explanations in English, Tagalog, and Bisaya!</p>
                     </div>
                 </div>
             </div>
@@ -76,7 +105,7 @@
             <!-- Input Controls -->
             <div class="control-panel">
                 <!-- Voice Button -->
-                <button id="voiceBtn" class="voice-btn">
+                <button id="voiceBtn" class="voice-btn" title="Speak your question">
                     <span class="mic-icon">🎤</span>
                     <span class="pulse-ring"></span>
                     <span class="pulse-ring"></span>
@@ -87,16 +116,24 @@
                     <input 
                         type="text" 
                         id="messageInput" 
-                        placeholder="Ask me anything about your subjects..."
+                        placeholder="Ask me anything or practice with the test..."
                         autocomplete="off"
                     >
-                    <button id="sendBtn" class="send-btn glow-btn">
+                    <button id="sendBtn" class="send-btn glow-btn" title="Send message">
                         <span>✨</span>
                     </button>
                 </div>
 
                 <!-- Voice Status -->
                 <div id="voiceStatus" class="voice-status"></div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button id="practiceBtnQuick" class="quick-btn">📝 Start Test</button>
+                <button id="explainBtnQuick" class="quick-btn">💡 Explain</button>
+                <button id="translateBtnQuick" class="quick-btn">🌐 Translate</button>
+                <button id="summaryBtnQuick" class="quick-btn">📊 Summary</button>
             </div>
 
             <!-- Settings -->
@@ -106,8 +143,8 @@
                     Voice Output
                 </label>
                 <label>
-                    <input type="checkbox" id="darkMode" checked>
-                    Dark Mode
+                    <input type="checkbox" id="autoCorrecting" checked>
+                    Auto-Correct Tests
                 </label>
             </div>
         </div>
@@ -116,3 +153,4 @@
     <script src="ai-assistant.js"></script>
 </body>
 </html>
+

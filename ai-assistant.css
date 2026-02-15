@@ -719,3 +719,264 @@ body {
         max-width: 90%;
     }
 }
+
+/* ==================== GOAL SETTING ==================== */
+.goal-setting {
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.goal-setting h3 {
+    margin-bottom: 1rem;
+    color: var(--primary-glow);
+    font-size: 0.95rem;
+}
+
+.input-field {
+    width: 100%;
+    padding: 0.8rem;
+    background: rgba(0, 212, 255, 0.05);
+    border: 1px solid var(--primary-glow);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    margin-bottom: 0.8rem;
+    transition: all 0.3s ease;
+}
+
+.input-field:focus {
+    outline: none;
+    background: rgba(0, 212, 255, 0.15);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+.input-field::placeholder {
+    color: var(--text-secondary);
+}
+
+#setGoalBtn {
+    width: 100%;
+    padding: 0.8rem;
+    background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+    border: none;
+    border-radius: 8px;
+    color: var(--dark-bg);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#setGoalBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+}
+
+/* ==================== LANGUAGE SELECTOR ==================== */
+.language-selector {
+    margin-bottom: 1.5rem;
+}
+
+.language-selector h3 {
+    margin-bottom: 0.8rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.lang-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.lang-btn {
+    flex: 1;
+    padding: 0.6rem;
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid var(--primary-glow);
+    border-radius: 8px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.lang-btn:hover {
+    background: rgba(0, 212, 255, 0.2);
+}
+
+.lang-btn.active {
+    background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+    color: var(--dark-bg);
+    border-color: var(--secondary-glow);
+}
+
+/* ==================== FILE UPLOAD ==================== */
+.file-upload-area {
+    margin-bottom: 1.5rem;
+}
+
+.file-upload-area h3 {
+    margin-bottom: 0.8rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.upload-zone {
+    border: 2px dashed var(--primary-glow);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    background: rgba(0, 212, 255, 0.05);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-zone:hover {
+    background: rgba(0, 212, 255, 0.15);
+    border-color: var(--secondary-glow);
+}
+
+.upload-zone.drag-over {
+    background: rgba(0, 212, 255, 0.25);
+    border-color: var(--secondary-glow);
+    transform: scale(1.02);
+}
+
+.upload-zone p {
+    margin: 0.5rem 0;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.upload-zone small {
+    color: var(--text-secondary);
+    display: block;
+}
+
+.file-status {
+    margin-top: 0.8rem;
+    padding: 0.8rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    min-height: 20px;
+}
+
+.file-status.success {
+    background: rgba(0, 255, 204, 0.1);
+    color: var(--secondary-glow);
+    border: 1px solid var(--secondary-glow);
+}
+
+.file-status.error {
+    background: rgba(255, 0, 110, 0.1);
+    color: var(--accent-glow);
+    border: 1px solid var(--accent-glow);
+}
+
+/* ==================== QUICK ACTIONS ==================== */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+    margin-top: 1rem;
+}
+
+.quick-btn {
+    padding: 0.7rem;
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid var(--primary-glow);
+    border-radius: 8px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.quick-btn:hover {
+    background: rgba(0, 212, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+.quick-btn.active {
+    background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow));
+    color: var(--dark-bg);
+    border-color: var(--secondary-glow);
+}
+
+/* ==================== TEST MODE ==================== */
+.test-container {
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid var(--border-color);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.test-question {
+    margin-bottom: 1.5rem;
+}
+
+.test-question p {
+    color: var(--text-primary);
+    margin-bottom: 0.8rem;
+    font-weight: 500;
+}
+
+.test-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.option-btn {
+    padding: 0.7rem;
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid var(--primary-glow);
+    border-radius: 8px;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.3s ease;
+}
+
+.option-btn:hover {
+    background: rgba(0, 212, 255, 0.2);
+}
+
+.option-btn.correct {
+    background: rgba(0, 255, 204, 0.3);
+    border-color: var(--secondary-glow);
+    color: var(--secondary-glow);
+}
+
+.option-btn.wrong {
+    background: rgba(255, 0, 110, 0.3);
+    border-color: var(--accent-glow);
+    color: var(--accent-glow);
+}
+
+.option-btn.disabled {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+    
+    .lang-buttons {
+        flex-direction: column;
+    }
+
+    .lang-btn {
+        width: 100%;
+    }
+}
