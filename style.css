@@ -528,8 +528,55 @@ section p {
         height: 350px;
     }
 
+/* CV Download Container */
+.cv-download-container {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.cv-format-select {
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    border-radius: 5px;
+    border: 2px solid #00d4ff;
+    background: #1a2847;
+    color: #00d4ff;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.cv-format-select:hover {
+    background: #00d4ff;
+    color: #0f1419;
+    box-shadow: 0 5px 15px rgba(0, 212, 255, 0.2);
+}
+
+.cv-format-select:focus {
+    outline: none;
+    background: #00d4ff;
+    color: #0f1419;
+}
+
+.cv-format-select option {
+    background: #1a2847;
+    color: #00d4ff;
+}
+
+@media (max-width: 768px) {
     .cta-buttons {
         flex-direction: column;
+    }
+
+    .cv-download-container {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .cv-format-select,
+    .btn {
+        width: 100%;
     }
 
     .btn {

@@ -44,7 +44,13 @@
                 </div>
                 <div class="cta-buttons">
                     <a href="contact.html" class="btn btn-primary">Get In Touch</a>
-                    <a href="assets/RESUME/FULLSTACK SOFTWARE DEV_Rolyn Kiunisala-CV.pdf" download class="btn btn-secondary">Download Resume</a>
+                    <div class="cv-download-container">
+                        <select id="cvFormatSelect" class="cv-format-select">
+                            <option value="professional">Professional CV</option>
+                            <option value="australian">Australian CV</option>
+                        </select>
+                        <a id="cvDownloadButton" href="assets/RESUME/Rolyn_Kiunisala_Professional_CV.pdf" download class="btn btn-primary">Download CV</a>
+                    </div>
                 </div>
             </div>
             <div class="hero-image">
@@ -193,5 +199,21 @@
     <footer>
         <p>&copy; 2026 Rolyn Kiunisala</p>
     </footer>
+
+    <script>
+        const cvFormatSelect = document.getElementById('cvFormatSelect');
+        const cvDownloadButton = document.getElementById('cvDownloadButton');
+
+        function updateDownloadLink() {
+            if (cvFormatSelect.value === 'professional') {
+                cvDownloadButton.href = 'assets/RESUME/Rolyn_Kiunisala_Professional_CV.pdf';
+            } else {
+                cvDownloadButton.href = 'assets/RESUME/Rolyn_Kiunisala_CV.pdf';
+            }
+        }
+
+        cvFormatSelect.addEventListener('change', updateDownloadLink);
+        updateDownloadLink();
+    </script>
 </body>
 </html>
